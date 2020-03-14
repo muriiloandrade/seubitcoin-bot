@@ -1,0 +1,23 @@
+{
+  "name": "seubitcoin-bot",
+  "version": "1.0.0",
+  "description": "A Twitter Bot that tweets BTC/BRL price.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Twitter",
+    "Bot",
+    "Bitcoin",
+    "Money"
+  ],
+  "author": "Murilo A.",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cron": "^1.8.2",
+    "dotenv": "^8.2.0",
+    "promised-twit": "^0.1.0"
+  }
+}
