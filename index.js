@@ -15,19 +15,45 @@ const job = new CronJob("*/10 * * * *", () => {
     timeout_ms: 60 * 1000
   });
 
-  const url = process.env.COIN_API;
   const getCryptoDate = async url => {
     try {
-      const response = await axios.get(url);
-      const data = response.data;
+      // Making two request 'cause CMC's API doesn't allow 2 convert options in free plan
+      const responseBRL = await axios({
+        method: "get",
+        url,
+        responseType: "json",
+        headers: { "X-CMC_PRO_API_KEY": process.env.CMC_KEY },
+        params: {
+          id: "1", // BTC CMC's ID
+          convert_id: "2783" // Brazilian Real CMC's ID
+        }
+      });
 
-      let btcBrlPrice = data.BTC.quotes.BRL.price.toLocaleString("pt-BR", {
+      const responseUSD = await axios({
+        method: "get",
+        url,
+        responseType: "json",
+        headers: { "X-CMC_PRO_API_KEY": process.env.CMC_KEY },
+        params: {
+          id: "1", // BTC CMC's ID
+          convert_id: "2781" // US Dollar CMC's ID
+        }
+      });
+
+      const srcBRL = responseBRL.data.data;
+      const srcUSD = responseUSD.data.data;
+
+      let btcBrlPrice = srcBRL[1].quote[2783].price.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
         maximumFractionDigits: 2
       });
 
-      let btcUsdPrice = data.BTC.quotes.USD.price.toLocaleString("pt-BR", {
+      let btcUsdPrice = srcUSD[1].quote[2781].price.toLocaleString("pt-BR", {
+        minimumFractionDigits: 2,
         maximumFractionDigits: 2
       });
+
+      let movPercent = srcBRL[1].quote[2783].percent_change_24h.toFixed(2);
 
       let mov = "";
 
@@ -39,7 +65,9 @@ const job = new CronJob("*/10 * * * *", () => {
       prevValue = btcBrlPrice;
 
       const tweetText = {
-        status: `${mov}🇧🇷💵 BTC/BRL R$ ${btcBrlPrice}\n🇺🇸💵 BTC/USD $ ${btcUsdPrice}`
+        status: `${mov}🇧🇷💵 BTC/BRL R$ ${btcBrlPrice}\n🇺🇸💵 BTC/USD $ ${btcUsdPrice}\nVariação 24h(%): ${
+          Math.sign(movPercent) == 1 ? "+" : ""
+        }${movPercent}`
       };
 
       await T.postStatusesUpdate(tweetText);
@@ -48,6 +76,7 @@ const job = new CronJob("*/10 * * * *", () => {
     }
   };
 
+  const url = process.env.COIN_URL;
   getCryptoDate(url);
 });
 
