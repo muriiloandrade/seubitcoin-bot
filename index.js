@@ -22,7 +22,10 @@ const job = new CronJob("*/10 * * * *", () => {
         method: "get",
         url,
         responseType: "json",
-        headers: { "X-CMC_PRO_API_KEY": process.env.CMC_KEY },
+        headers: {
+          "X-CMC_PRO_API_KEY": process.env.CMC_KEY,
+          "Accept-Encoding": "deflate, gzip"
+        },
         params: {
           id: "1", // BTC CMC's ID
           convert_id: "2783" // Brazilian Real CMC's ID
@@ -33,7 +36,10 @@ const job = new CronJob("*/10 * * * *", () => {
         method: "get",
         url,
         responseType: "json",
-        headers: { "X-CMC_PRO_API_KEY": process.env.CMC_KEY },
+        headers: {
+          "X-CMC_PRO_API_KEY": process.env.CMC_KEY,
+          "Accept-Encoding": "deflate, gzip"
+        },
         params: {
           id: "1", // BTC CMC's ID
           convert_id: "2781" // US Dollar CMC's ID
@@ -53,7 +59,7 @@ const job = new CronJob("*/10 * * * *", () => {
         maximumFractionDigits: 2
       });
 
-      let movPercent = srcBRL[1].quote[2783].percent_change_24h.toFixed(2);
+      let movPercent = srcUSD[1].quote[2781].percent_change_24h.toFixed(2);
 
       let mov = "";
 
