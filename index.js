@@ -1,21 +1,20 @@
 require("dotenv").config();
-const Twit = require("promised-twit");
+const { TwitterApi } = require("twitter-api-v2");
 const axios = require("axios");
 const CronJob = require("cron").CronJob;
 
 let prevValue;
 
-const job = new CronJob("*/10 * * * *", () => {
+const job = new CronJob("*/1 * * * *", () => {
   console.log("Posting a new tweet!");
-  const T = new Twit({
-    consumer_key: process.env.CKEY,
-    consumer_secret: process.env.CSCRT,
-    access_token: process.env.ATKN,
-    access_token_secret: process.env.ATKSCRT,
-    timeout_ms: 60 * 1000
+  const client = new TwitterApi({
+    appKey: process.env.CKEY,
+    appSecret: process.env.CSCRT,
+    accessToken: process.env.ATKN,
+    accessSecret: process.env.ATKSCRT,
   });
 
-  const getCryptoDate = async url => {
+  const getCryptoDate = async (url) => {
     try {
       // Making two request 'cause CMC's API doesn't allow 2 convert options in free plan
       const responseBRL = await axios({
@@ -24,12 +23,12 @@ const job = new CronJob("*/10 * * * *", () => {
         responseType: "json",
         headers: {
           "X-CMC_PRO_API_KEY": process.env.CMC_KEY,
-          "Accept-Encoding": "deflate, gzip"
+          "Accept-Encoding": "deflate, gzip",
         },
         params: {
           id: "1", // BTC CMC's ID
-          convert_id: "2783" // Brazilian Real CMC's ID
-        }
+          convert_id: "2783", // Brazilian Real CMC's ID
+        },
       });
 
       const responseUSD = await axios({
@@ -38,12 +37,12 @@ const job = new CronJob("*/10 * * * *", () => {
         responseType: "json",
         headers: {
           "X-CMC_PRO_API_KEY": process.env.CMC_KEY,
-          "Accept-Encoding": "deflate, gzip"
+          "Accept-Encoding": "deflate, gzip",
         },
         params: {
           id: "1", // BTC CMC's ID
-          convert_id: "2781" // US Dollar CMC's ID
-        }
+          convert_id: "2781", // US Dollar CMC's ID
+        },
       });
 
       const srcBRL = responseBRL.data.data;
@@ -51,12 +50,12 @@ const job = new CronJob("*/10 * * * *", () => {
 
       let btcBrlPrice = srcBRL[1].quote[2783].price.toLocaleString("pt-BR", {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 2,
       });
 
       let btcUsdPrice = srcUSD[1].quote[2781].price.toLocaleString("pt-BR", {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 2,
       });
 
       let movPercent = srcUSD[1].quote[2781].percent_change_24h.toFixed(2);
@@ -70,13 +69,11 @@ const job = new CronJob("*/10 * * * *", () => {
 
       prevValue = btcBrlPrice;
 
-      const tweetText = {
-        status: `${mov}🇧🇷💵 BTC/BRL R$ ${btcBrlPrice}\n🇺🇸💵 BTC/USD $ ${btcUsdPrice}\nVariação 24h(%): ${
-          Math.sign(movPercent) == 1 ? "+" : ""
-        }${movPercent}`
-      };
+      const tweetText = `${mov}🇧🇷💵 BTC/BRL R$ ${btcBrlPrice}\n🇺🇸💵 BTC/USD $ ${btcUsdPrice}\nVariação 24h(%): ${
+        Math.sign(movPercent) == 1 ? "+" : ""
+      }${movPercent}`;
 
-      await T.postStatusesUpdate(tweetText);
+      await client.v1.tweet(tweetText);
     } catch (error) {
       console.log("Something went wrong:\n" + error);
     }
