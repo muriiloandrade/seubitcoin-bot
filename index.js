@@ -5,7 +5,7 @@ const CronJob = require("cron").CronJob;
 
 let prevValue;
 
-const job = new CronJob("*/1 * * * *", () => {
+const job = new CronJob("*/10 * * * *", () => {
   console.log("Posting a new tweet!");
   const client = new TwitterApi({
     appKey: process.env.CKEY,
